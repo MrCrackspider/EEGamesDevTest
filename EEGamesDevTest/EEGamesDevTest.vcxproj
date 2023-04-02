@@ -128,6 +128,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EEGamesDevTest.cpp" />
+    <ClCompile Include="Net.cpp" />
+    <ClCompile Include="Node.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Net.h" />
+    <ClInclude Include="Node.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
