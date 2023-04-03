@@ -1,15 +1,12 @@
 #include <iostream>
 #include "Net.h"
-#include <thread>
 
 int main()
 {
     EventProbabilities Probabilities{ 10,1,50,1 };
     Net net(Probabilities);
     net.FillRandomNodes(20);
-
-    std::thread thread(&Net::StartSimulation, &net);
-    thread.detach();
+    net.StartSimulation(1000);
     std::string InputCommand;
     do
     {
@@ -17,6 +14,4 @@ int main()
 
     } while (InputCommand != "stop");
     net.StopSimulation();
-
-    //net.StartSimulation();
 }

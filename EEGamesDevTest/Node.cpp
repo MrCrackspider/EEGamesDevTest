@@ -40,20 +40,8 @@ void Node::OnUnsubscribed(Node* node)
 
 int Node::MakeEvent()
 {
-	//std::random_device dev;
-	//std::mt19937 rng(dev());
-	//std::uniform_int_distribution<std::mt19937::result_type> dist6(1, 6);
-	//return dist6(rng);
-
-
-	//std::random_device dev;
-	//std::mt19937 rng(dev());
-	//std::uniform_int_distribution<std::mt19937::result_type> dist6(1, 6); // distribution in range [1, 6]
-
-	//std::cout << dist6(rng) << std::endl;
-
 	srand((unsigned)time(NULL));
-	float EventValue = rand();
+	float EventValue = rand()%100;
 
 	for (auto it = Subscribers.begin(); it != Subscribers.end(); ++it)
 	{
