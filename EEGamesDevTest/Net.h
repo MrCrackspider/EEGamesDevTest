@@ -25,14 +25,14 @@ public:
 	void StopSimulation();
 
 	// Sets initial amount of nodes with random IDs and random subscriptions between them
-	void FillRandomNodes(int Amount, int AmountOfSubscriptions);
+	void FillRandomNodes(int AmountOfNodes, int AmountOfSubscriptions);
 private:
 	void StartSimulationThread(long long TickDuration, int UpdatePeriod);
 	bool SimulationRunning;
 	std::vector<Node*> Nodes;
 
 	// ExceptionList used to ignore new created nodes
-	std::map<int, Node*> ExceptionList;
+	std::vector<int> ExceptionList;
 
 	// Event probabilities (in %) of nodes making event / subscription / unsubscription / new node respectively
 	struct EventProbabilities Probabilities;

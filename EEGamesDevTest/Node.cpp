@@ -62,7 +62,9 @@ void Node::OnEventReceived(Node* node, float EventValue)
 		NodesData.insert(std::make_pair(node->ID, NodeData{ EventValue, 1 }));
 	}
 	Item = NodesData.find(node->ID);
-	std::cout << this->GetName() << " received event from " << node->GetName() << ". Event summ = " << Item->second.EventSumm << ". Events received = " << Item->second.EventsReceived << std::endl;
+	std::cout << node->GetName() << " -> " << this->GetName() << ": S = " << Item->second.EventSumm << std::endl;
+	std::cout << node->GetName() << " -> " << this->GetName() << ": N = " << Item->second.EventsReceived << std::endl;
+	//std::cout << this->GetName() << " received event from " << node->GetName() << ". Event summ = " << Item->second.EventSumm << ". Events received = " << Item->second.EventsReceived << std::endl;
 }
 
 Node* Node::CreateNewNode(int ID)
