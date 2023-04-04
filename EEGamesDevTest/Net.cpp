@@ -5,9 +5,9 @@
 
 Net::Net(EventProbabilities Probabilities) : Probabilities(Probabilities) {}
 
-void Net::StartSimulation(long long TickDuration, int UpdateRate)
+void Net::StartSimulation(long long TickDuration, int UpdatePeriod)
 {
-	std::thread thread(&Net::StartSimulationThread, this, TickDuration, UpdateRate);
+	std::thread thread(&Net::StartSimulationThread, this, TickDuration, UpdatePeriod);
 	thread.detach();
 }
 
@@ -20,11 +20,13 @@ int Net::Update()
 		{
 			if ((Nodes[i]->GetNeighbours().size() <= 0) && (ExceptionList.find(Nodes[i]->GetID()) != ExceptionList.end()))
 			{
+				delete Nodes[i];
 				Nodes.erase(Nodes.begin() + i);
 				NodesErased++;
 			}
 		}
 		if (Nodes.size() <= 0) StopSimulation();
+		ExceptionList.clear();
 		return NodesErased;
 	}
 	else
@@ -54,7 +56,7 @@ void Net::FillRandomNodes(int AmountOfNodes, int AmountOfSubscriptions)
 	Update();
 }
 
-void Net::StartSimulationThread(long long TickDuration, int UpdateRate)
+void Net::StartSimulationThread(long long TickDuration, int UpdatePeriod)
 {
 	SimulationRunning = true;
 	int Iteration = 1;
@@ -113,15 +115,15 @@ void Net::StartSimulationThread(long long TickDuration, int UpdateRate)
 				std::cout << Nodes[i]->GetName() << " Did nothing\n";
 			}
 		}
-		std::cout << std::endl;
-		Iteration++;
-		if (Iteration % UpdateRate == 0)
+		if (Iteration % UpdatePeriod == 0)
 		{
 			int NodesErased = 0;
 			size_t NodesSize = Nodes.size();
 			NodesErased = Update();
 			std::cout << "Nodes erased: " << NodesErased << "/" << NodesSize << std::endl;
 		}
+		Iteration++;
+		std::cout << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(TickDuration));
 	}
 }
