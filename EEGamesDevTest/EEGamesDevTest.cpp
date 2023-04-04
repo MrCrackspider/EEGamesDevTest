@@ -5,8 +5,8 @@ int main()
 {
     EventProbabilities Probabilities{ 10,1,50,1 };
     Net net(Probabilities);
-    net.FillRandomNodes(20);
-    net.StartSimulation(1000);
+    net.FillRandomNodes(20, 100);
+    net.StartSimulation(1000, 10);
     std::string InputCommand;
     do
     {

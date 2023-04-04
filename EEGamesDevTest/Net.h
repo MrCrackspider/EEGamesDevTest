@@ -1,6 +1,7 @@
 #pragma once
 #include "Node.h"
 #include <vector>
+#include <map>
 
 struct EventProbabilities
 {
@@ -14,14 +15,15 @@ class Net
 {
 public:
 	Net(EventProbabilities Probabilities);
-	void StartSimulation(long long TickDuration);
-	void Update();
+	void StartSimulation(long long TickDuration, int UpdateRate);
+	int Update();
 	void StopSimulation();
-	void FillRandomNodes(int Amount);
+	void FillRandomNodes(int Amount, int AmountOfSubscriptions);
 private:
-	void StartSimulationThread(long long TickDuration);
+	void StartSimulationThread(long long TickDuration, int UpdateRate);
 	bool SimulationRunning;
 	std::vector<Node*> Nodes;
+	std::map<int, Node*> ExceptionList;
 	struct EventProbabilities Probabilities;
 	int GetRandom(int Min, int Max);
 };

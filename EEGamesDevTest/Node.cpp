@@ -1,7 +1,6 @@
 #include "Node.h"
 #include <random>
-
-
+#include <iostream>
 
 Node::Node(int ID) 
 { 
@@ -55,13 +54,15 @@ void Node::OnEventReceived(Node* node, float EventValue)
 	auto Item = NodesData.find(node->ID);
 	if (Item != NodesData.end())
 	{
-		Item->second.EventAmount++;
-		Item->second.EventAmount += EventValue;
+		Item->second.EventsReceived++;
+		Item->second.EventSumm += EventValue;
 	}
 	else
 	{
 		NodesData.insert(std::make_pair(node->ID, NodeData{ EventValue, 1 }));
 	}
+	Item = NodesData.find(node->ID);
+	std::cout << this->GetName() << " received event from " << node->GetName() << ". Event summ = " << Item->second.EventSumm << ". Events received = " << Item->second.EventsReceived << std::endl;
 }
 
 Node* Node::CreateNewNode(int ID)
