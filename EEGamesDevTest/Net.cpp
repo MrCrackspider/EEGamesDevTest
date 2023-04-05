@@ -12,28 +12,48 @@
 #define debug(str)
 #endif
 
-Net::Net(EventProbabilities Probabilities) : Probabilities(Probabilities) {}
-
-void Net::StartSimulation(long long TickDuration, int UpdatePeriod)
+Net::Net(EventProbabilities Probabilities)
 {
-	std::thread thread(&Net::StartSimulationThread, this, TickDuration, UpdatePeriod);
+	// Normalization
+	SimulationRunning = false;
+	float ProbabilitiesSumm = Probabilities.pUnsubscription + Probabilities.pSubscription + Probabilities.pNewNode + Probabilities.pEvent;
+	if (ProbabilitiesSumm > 100)
+	{
+		this->Probabilities.pUnsubscription = 100 * Probabilities.pUnsubscription / ProbabilitiesSumm;
+		this->Probabilities.pSubscription = 100 * Probabilities.pSubscription / ProbabilitiesSumm;
+		this->Probabilities.pNewNode = 100 * Probabilities.pNewNode / ProbabilitiesSumm;
+		this->Probabilities.pEvent = 100 * Probabilities.pEvent / ProbabilitiesSumm;
+	}
+	else this->Probabilities = Probabilities;
+}
+
+void Net::StartSimulation()
+{
+	std::thread thread(&Net::StartSimulationThread, this);
 	thread.detach();
 }
 
 int Net::Update()
 {
-	if(Nodes.size()>0)
+	int NodesErased = 0;
+	//size_t NodesSize = Nodes.size();
+	if (Nodes.size() > 0)
 	{
-		int NodesErased = 0;
+		for (int i = 0; i < Nodes.size(); ++i) std::cout << i << ": " << Nodes[i]->GetName() << " size: " << Nodes[i]->GetNeighbours().size() << std::endl;
 		for (int i = 0; i < Nodes.size(); ++i)
 		{
-			if ((Nodes[i]->GetNeighbours().size() <= 0) && (std::find(ExceptionList.begin(), ExceptionList.end(), Nodes[i]->GetID()) != ExceptionList.end()))
+			for (int i = 0; i < Nodes.size(); ++i)
 			{
-				delete Nodes[i];
-				Nodes.erase(Nodes.begin() + i);
-				NodesErased++;
+				if ((Nodes[i]->GetNeighbours().size() <= 0) && (std::find(ExceptionList.begin(), ExceptionList.end(), Nodes[i]->GetID()) == ExceptionList.end()))
+				{
+					//delete Nodes[i];
+					Nodes.erase(Nodes.begin() + i);
+					NodesErased++;
+					break;
+				}
 			}
 		}
+
 		if (Nodes.size() <= 0) StopSimulation();
 		ExceptionList.clear();
 		return NodesErased;
@@ -47,32 +67,56 @@ int Net::Update()
 
 void Net::StopSimulation()
 {
-	SimulationRunning = false;
-	std::cout << "Simulation Stopped\n";
+	if (SimulationRunning)
+	{
+		SimulationRunning = false;
+		std::cout << "==================\nSimulation Stopped\n==================\n";
+	}
 }
 
 void Net::FillRandomNodes(int AmountOfNodes, int AmountOfSubscriptions)
 {
 	for (size_t i = 0; i < AmountOfNodes; i++)
 	{
-		Nodes.push_back(new Node(GetRandom(0, 1000)));
+		int NewID = 0;
+		do
+		{
+			NewID = GetRandom(0, 1000);
+		} while (IsIDExists(NewID));
+		Nodes.push_back(new Node(NewID));
 	}
-
 	for (size_t i = 0; i < AmountOfSubscriptions; i++)
 	{
-		Nodes[GetRandom(0, Nodes.size() - 1)]->SubscribeTo(Nodes[GetRandom(0, Nodes.size() - 1)]);
+		Nodes[GetRandom(0, static_cast<int>(Nodes.size()) - 1)]->SubscribeTo((Nodes[GetRandom(0, static_cast<int>(Nodes.size()) - 1)]));
 	}
 	Update();
+	std::cout << "Initial nodes(" << Nodes.size() << "):\n";
+	for (auto node : Nodes)
+	{
+		std::cout << node->GetName() << " \t#Subscribers: " << node->GetSubscribers().size() << " \t#Subscriptions: " << node->GetSubscriptions().size() << std::endl;
+	}
 }
 
-void Net::StartSimulationThread(long long TickDuration, int UpdatePeriod)
+void Net::StartSimulationThread()
 {
 	SimulationRunning = true;
+	std::cout << "==================\nSimulation Started\n==================\n";
+
+	// Iteration stats
 	int Iteration = 1;
-	//std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+	int NewUnsubscriptionAmount = 0;
+	int NewSubscriptionAmount = 0;
+	int NewNodesAmount = 0;
+	int EventsAmount = 0;
+
 	while (SimulationRunning)
 	{
-		std::cout << "Iteration: " << Iteration << std::endl;
+		NewUnsubscriptionAmount = 0;
+		NewSubscriptionAmount = 0;
+		NewNodesAmount = 0;
+		EventsAmount = 0;
+
+		std::cout << "-----------------------------------------------\nIteration: " << Iteration << std::endl;
 		for (int i = 0; i < Nodes.size(); ++i)
 		{
 			int Action = GetRandom(0, 100);
@@ -80,15 +124,25 @@ void Net::StartSimulationThread(long long TickDuration, int UpdatePeriod)
 			if (Action <= Probabilities.pEvent)
 			{
 				int EventValue = Nodes[i]->MakeEvent();
-				debug(Nodes[i]->GetName() << " Made an Event with value: " << EventValue << std::endl);
+				EventsAmount++;
+				debug(Nodes[i]->GetName() << " Made an Event with value: " << EventValue << "\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
+					<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl);
 			}
 			// Make a new node
 			else if (Action <= (Probabilities.pNewNode + Probabilities.pEvent))
 			{
-				auto NewNode = Nodes[i]->CreateNewNode(GetRandom(0, 1000));
+				int NewID = 0;
+				do
+				{
+					NewID = GetRandom(0, 1000);
+				} while (IsIDExists(NewID));
+				auto NewNode = Nodes[i]->CreateNewNode(NewID);
 				Nodes.push_back(NewNode);
 				ExceptionList.push_back(NewNode->GetID());
-				debug (Nodes[i]->GetName() << " Created new node\n");
+				NewNodesAmount++;
+				NewSubscriptionAmount++;
+				debug(Nodes[i]->GetName() << " Created new node " << NewNode->GetID() << "\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
+					<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl);
 			}
 			// Subscription
 			else if (Action <= (Probabilities.pSubscription + Probabilities.pNewNode + Probabilities.pEvent))
@@ -97,18 +151,20 @@ void Net::StartSimulationThread(long long TickDuration, int UpdatePeriod)
 				if (Neighbours.size() > 0)
 				{
 					auto Neighbour = Neighbours.begin();
-					std::advance(Neighbour, GetRandom(0, Neighbours.size()-1));
+					std::advance(Neighbour, GetRandom(0, static_cast<int>(Neighbours.size()) - 1));
 					Neighbours = Neighbour->second->GetNeighbours();
 					if (Neighbours.size() > 0)
 					{
 						Neighbour = Neighbours.begin();
-						std::advance(Neighbour, GetRandom(0, Neighbours.size()-1));
+						std::advance(Neighbour, GetRandom(0, static_cast<int>(Neighbours.size()) - 1));
 						Nodes[i]->SubscribeTo(Neighbour->second);
-						debug (Nodes[i]->GetName() << " Subscribed to " << Neighbour->second->GetName() << std::endl);
+						NewSubscriptionAmount++;
+						debug(Nodes[i]->GetName() << " Subscribed to " << Neighbour->second->GetName() << "\t\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
+							<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl);
 					}
-					else debug (Nodes[i]->GetName() << " Failed to subscribe\n");
+					else debug(Nodes[i]->GetName() << " Failed to subscribe\n");
 				}
-				else debug (Nodes[i]->GetName() << " Failed to subscribe\n");
+				else debug(Nodes[i]->GetName() << " Failed to subscribe\n");
 			}
 			// Unsubscription
 			else if (Action <= (Probabilities.pUnsubscription + Probabilities.pSubscription + Probabilities.pNewNode + Probabilities.pEvent))
@@ -117,29 +173,32 @@ void Net::StartSimulationThread(long long TickDuration, int UpdatePeriod)
 				if (Subscriptions.size() > 0)
 				{
 					auto Subscription = Subscriptions.begin();
-					std::advance(Subscription, GetRandom(0, Subscriptions.size() - 1));
+					std::advance(Subscription, GetRandom(0, static_cast<int>(Subscriptions.size()) - 1));
 					Nodes[i]->UnsubscribeFrom(Subscription->second);
-					debug (Nodes[i]->GetName() << " Unsubscribed from " << Subscription->second->GetName() << std::endl);
+					NewUnsubscriptionAmount++;
+					debug(Nodes[i]->GetName() << " Unsubscribed from " << Subscription->second->GetName() << "\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
+						<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl);
 				}
-				else debug (Nodes[i]->GetName() << " Failed to unsubscribe\n");
+				else debug(Nodes[i]->GetName() << " Failed to unsubscribe\t\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
+					<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl);
 			}
 			// None of the above
 			else
 			{
-				debug (Nodes[i]->GetName() << " Did nothing\n");
+				debug(Nodes[i]->GetName() << " Did nothing\t\t\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
+					<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl);
 			}
 		}
-		// Calls Update each UpdatePeriod
-		if (Iteration % UpdatePeriod == 0)
-		{
-			int NodesErased = 0;
-			size_t NodesSize = Nodes.size();
-			NodesErased = Update();
-			std::cout << "Nodes erased: " << NodesErased << "/" << NodesSize << std::endl;
-		}
 		Iteration++;
-		std::cout << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(TickDuration));
+		std::cout << "Events happened: " << EventsAmount << std::endl;
+		std::cout << "New nodes created: " << NewNodesAmount << std::endl;
+		std::cout << "New subscriptions amount: " << NewSubscriptionAmount << std::endl;
+		std::cout << "Unsubscriptions amount: " << NewUnsubscriptionAmount << std::endl;
+		size_t NodesSize = Nodes.size();
+		int NodesErased = 0;
+		NodesErased = Update();
+		std::cout << "Nodes erased: " << NodesErased << "/" << NodesSize << "\n-----------------------------------------------\n\n";
+
 	}
 }
 
@@ -150,3 +209,16 @@ int Net::GetRandom(int Min, int Max)
 	std::uniform_int_distribution<std::mt19937::result_type> distribution(Min, Max);
 	return distribution(rng);
 }
+
+bool Net::IsIDExists(int ID)
+{
+	for (std::vector<Node*>::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+	{
+		if ((*it)->GetID() == ID)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+

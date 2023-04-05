@@ -2,18 +2,18 @@
 #include <random>
 #include <iostream>
 
-Node::Node(int ID) 
-{ 
+Node::Node(int ID)
+{
 	this->ID = ID;
-	Name = "Node_" + std::to_string(ID); 
+	Name = "Node_" + std::to_string(ID);
 }
 
 void Node::SubscribeTo(Node* node)
 {
 	if (node->ID != this->ID)
 	{
-		Subscriptions.insert(std::make_pair(node->ID, node));
-		Neighbours.insert(std::make_pair(node->ID, node));
+		Subscriptions.insert({ node->ID, node });
+		Neighbours.insert({ node->ID, node });
 		node->OnSubscribed(this);
 	}
 }
@@ -27,29 +27,30 @@ void Node::UnsubscribeFrom(Node* node)
 
 void Node::OnSubscribed(Node* node)
 {
-	Subscribers.insert(std::make_pair(node->ID, node));
-	Neighbours.insert(std::make_pair(node->ID, node));
+	Subscribers.insert({ node->ID, node });
+	Neighbours.insert({ node->ID, node });
 }
 
 void Node::OnUnsubscribed(Node* node)
 {
-	Subscribers.erase(node->ID);
 	Neighbours.erase(node->ID);
+	Subscribers.erase(node->ID);
 }
 
 int Node::MakeEvent()
 {
 	srand((unsigned)time(NULL));
-	float EventValue = rand()%100;
-
-	for (auto it = Subscribers.begin(); it != Subscribers.end(); ++it)
+	int EventValue = rand() % 100;
+	Node* NewNode = new Node(ID);
+	for (auto sub : Subscribers)
 	{
-		it->second->OnEventReceived(this, EventValue);
+		Node* tptr(this);
+		sub.second->OnEventReceived(tptr, EventValue);
 	}
 	return EventValue;
 }
 
-void Node::OnEventReceived(Node* node, float EventValue)
+void Node::OnEventReceived(Node* node, int EventValue)
 {
 	auto Item = NodesData.find(node->ID);
 	if (Item != NodesData.end())
@@ -59,12 +60,11 @@ void Node::OnEventReceived(Node* node, float EventValue)
 	}
 	else
 	{
-		NodesData.insert(std::make_pair(node->ID, NodeData{ EventValue, 1 }));
+		NodesData.insert({ node->ID, NodeData{ EventValue, 1 } });
 	}
 	Item = NodesData.find(node->ID);
 	std::cout << node->GetName() << " -> " << this->GetName() << ": S = " << Item->second.EventSumm << std::endl;
 	std::cout << node->GetName() << " -> " << this->GetName() << ": N = " << Item->second.EventsReceived << std::endl;
-	//std::cout << this->GetName() << " received event from " << node->GetName() << ". Event summ = " << Item->second.EventSumm << ". Events received = " << Item->second.EventsReceived << std::endl;
 }
 
 Node* Node::CreateNewNode(int ID)
@@ -82,6 +82,11 @@ std::map<int, Node*> Node::GetNeighbours()
 std::map<int, Node*> Node::GetSubscriptions()
 {
 	return Subscriptions;
+}
+
+std::map<int, Node*> Node::GetSubscribers()
+{
+	return Subscribers;
 }
 
 int Node::GetID()

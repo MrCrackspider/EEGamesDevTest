@@ -6,7 +6,7 @@ class Node
 {
 	struct NodeData
 	{
-		float EventSumm;
+		int EventSumm;
 		int EventsReceived;
 	};
 public:
@@ -23,8 +23,10 @@ public:
 
 	// Creates new node and subscribes to it
 	Node* CreateNewNode(int ID);
+
 	std::map<int, Node*> GetNeighbours();
 	std::map<int, Node*> GetSubscriptions();
+	std::map<int, Node*> GetSubscribers();
 	int GetID();
 	std::string GetName();
 private:
@@ -35,7 +37,7 @@ private:
 	void OnUnsubscribed(Node* node);
 
 	// Called when any other node makes event
-	void OnEventReceived(Node* node, float EventValue);
+	void OnEventReceived(Node* node, int EventValue);
 	int ID;
 
 	// Neighbours = Subscribers + Subscriptions (excess field?)
