@@ -4,15 +4,32 @@
 
 int main()
 {
-    struct EventProbabilities Probabilities{ 25,1,50,1 };
-    Net net(Probabilities);
-    net.FillRandomNodes(20, 100);
-    net.StartSimulation();
-    while (true)
+    struct EventProbabilities Probabilities{ 25,10,50,10 };
+    Net net(100, 400, Probabilities);
+    char InputCommand;
+    bool exit = false;
+    bool run = true;
+    std::cout << "s - start simulation auto\nn - perform iteration\nr - reset\ne - exit\n";
+    while (!exit)
     {
-        if (_kbhit())
+        std::cout << "\nInput: ";
+        std::cin >> InputCommand;
+        switch (InputCommand)
         {
-            net.StopSimulation();
+        case 's':
+            net.StartSimulation();
+            break;
+        case 'n':
+            net.PerformIteration();
+            break;
+        case 'r':
+            net.Reset();
+            break;
+        case 'e':
+            exit = true;
+            break;
+        default:
+            break;
         }
     }
 }

@@ -8,13 +8,22 @@ Node::Node(int ID)
 	Name = "Node_" + std::to_string(ID);
 }
 
+Node::~Node()
+{
+	for (auto node : Subscriptions)
+	{
+		this->UnsubscribeFrom(node.second);
+		//node.second->OnUnsubscribed(this);
+	}
+}
+
 bool Node::SubscribeTo(Node* node)
 {
 	if (node->ID != this->ID)
 	{
 		Subscriptions.insert({ node->ID, node });
-		Neighbours.insert({ node->ID, node });
 		node->OnSubscribed(this);
+		Neighbours.insert({ node->ID, node });
 		return true;
 	}
 	else return false;
@@ -23,12 +32,12 @@ bool Node::SubscribeTo(Node* node)
 void Node::UnsubscribeFrom(Node* node)
 {
 	Subscriptions.erase(node->ID);
+	node->OnUnsubscribed(this);
 	auto Item = Subscribers.find(node->ID);
 	if (Item == Subscribers.end())
 	{
 		Neighbours.erase(node->ID);
 	}
-	node->OnUnsubscribed(this);
 }
 
 void Node::OnSubscribed(Node* node)
@@ -40,7 +49,6 @@ void Node::OnSubscribed(Node* node)
 void Node::OnUnsubscribed(Node* node)
 {
 	Subscribers.erase(node->ID);
-
 	auto Item = Subscriptions.find(node->ID);
 	if (Item == Subscriptions.end())
 	{

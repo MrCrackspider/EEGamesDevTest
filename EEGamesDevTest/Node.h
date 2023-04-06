@@ -11,7 +11,7 @@ class Node
 	};
 public:
 	Node(int ID);
-
+	~Node();
 	// Subscribes to node and notifies it
 	bool SubscribeTo(Node* node);
 
