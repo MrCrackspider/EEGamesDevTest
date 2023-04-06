@@ -5,7 +5,7 @@
 int main()
 {
     struct EventProbabilities Probabilities { 25, 10, 50, 10 };
-    Net net(100, 400, Probabilities);
+    Net* net = new Net(100, 200, Probabilities);
     char InputCommand;
     bool exit = false;
     bool run = true;
@@ -17,21 +17,21 @@ int main()
         switch (InputCommand)
         {
         case 's':
-            net.StartSimulation();
+            net->StartSimulation();
             while (run)
             {
                 if (_kbhit())
                 {
-                    net.StopSimulation();
+                    net->StopSimulation();
                     run = false;
                 }
             }
             break;
         case 'n':
-            net.PerformIteration();
+            net->PerformIteration();
             break;
         case 'r':
-            net.Reset();
+            net->Reset();
             break;
         case 'e':
             exit = true;
@@ -40,4 +40,5 @@ int main()
             break;
         }
     }
+    delete net;
 }

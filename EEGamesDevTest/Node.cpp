@@ -11,7 +11,7 @@ Node::Node(int ID)
 // Meaningless operation
 Node::~Node()
 {
-	for (auto node : Subscriptions) this->UnsubscribeFrom(node.second);
+	//std::cout << Name << " deleted\n";
 }
 
 bool Node::SubscribeTo(Node* node)

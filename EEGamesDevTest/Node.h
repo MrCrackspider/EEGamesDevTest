@@ -12,6 +12,7 @@ class Node
 public:
 	Node(int ID);
 	~Node();
+	
 	// Subscribes to node and notifies it
 	bool SubscribeTo(Node* node);
 
@@ -38,6 +39,7 @@ private:
 
 	// Called when any other node makes event
 	void OnEventReceived(Node* node, int EventValue);
+
 	int ID;
 
 	// Neighbours = Subscribers + Subscriptions (excess field?)

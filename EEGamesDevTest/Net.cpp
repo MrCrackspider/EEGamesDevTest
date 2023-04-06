@@ -18,12 +18,18 @@ Net::Net(int AmountOfNodes, int AmountOfSubscriptions, EventProbabilities Probab
 	}
 	else this->Probabilities = Probabilities;
 
+	Iteration = 1;
 	SimulationRunning = false;
 	this->AmountOfNodes = AmountOfNodes;
 	this->AmountOfSubscriptions = AmountOfSubscriptions;
 	FillRandomNodes(AmountOfNodes, AmountOfSubscriptions);
 	std::thread thread(&Net::StartSimulationThread, this);
 	thread.detach();
+}
+
+Net::~Net()
+{
+	for (auto node : Nodes) delete node;
 }
 
 void Net::StartSimulation()
@@ -51,7 +57,8 @@ void Net::StartSimulationThread()
 int Net::Update()
 {
 	int NodesErased = 0;
-	Nodes.erase(std::remove_if(Nodes.begin(), Nodes.end(), [&NodesErased](Node* node) {
+
+	Nodes.erase(std::remove_if(Nodes.begin(), Nodes.end(), [&](Node* node) {
 		bool ReturnValue = node->GetNeighbours().empty();
 		if (ReturnValue)
 		{
@@ -59,6 +66,7 @@ int Net::Update()
 			NodesErased++;
 		}
 		return ReturnValue; }), Nodes.end());
+
 	if (Nodes.empty()) StopSimulation();
 	return NodesErased;
 }
@@ -76,7 +84,8 @@ void Net::FillRandomNodes(int AmountOfNodes, int AmountOfSubscriptions)
 {
 	for (size_t i = 0; i < AmountOfNodes; i++)
 	{
-		Nodes.push_back(new Node(GenerateNewID(200)));
+		int ID = GenerateNewID(200);
+		if (ID != -1) Nodes.push_back(new Node(ID));
 	}
 	// Amount of result subscriptions may not match the requirement
 	for (size_t i = 0; i < AmountOfSubscriptions; i++)
@@ -125,7 +134,7 @@ void Net::PerformIteration()
 			int NewID = GenerateNewID(200);
 			if (NewID != -1)
 			{
-				Node* NewNode = Nodes[i]->CreateNewNode(GenerateNewID(200));
+				Node* NewNode = Nodes[i]->CreateNewNode(NewID);
 				Nodes.push_back(NewNode);
 				NewNodesAmount++;
 				NewSubscriptionAmount++;
@@ -203,9 +212,9 @@ void Net::PerformIteration()
 }
 
 void Net::Reset()
-{
+{	
 	for (auto node : Nodes) delete node;
-	Nodes.clear();
+	Nodes.resize(0);
 	Iteration = 1;
 	FillRandomNodes(AmountOfNodes, AmountOfSubscriptions);
 }

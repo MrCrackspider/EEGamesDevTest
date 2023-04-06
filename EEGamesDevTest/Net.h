@@ -14,6 +14,7 @@ class Net
 {
 public:
 	Net(int AmountOfNodes, int AmountOfSubscriptions, EventProbabilities Probabilities);
+	~Net();
 
 	void StartSimulation();
 
