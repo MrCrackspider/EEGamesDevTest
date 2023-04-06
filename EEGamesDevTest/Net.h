@@ -15,8 +15,6 @@ class Net
 public:
 	Net(EventProbabilities Probabilities);
 
-	// TickDuration describes amount of time (in ms) between events
-	// UpdatePeriod describes amount of ticks before net update starts
 	void StartSimulation();
 
 	// Erases all nodes without neighbours
@@ -32,15 +30,15 @@ private:
 
 	std::vector<Node*> Nodes;
 
-	// IDExceptionList used to ignore new created nodes
-	//std::vector<int> IDExceptionList;
-
 	// Event probabilities (in %) of nodes making event / subscription / unsubscription / new node respectively
 	struct EventProbabilities Probabilities;
 
 	// Self explains
 	int GetRandom(int Min, int Max);
 
+	// Checks each node's ID
 	bool IsIDExists(int ID);
+
+	int GenerateNewID(int Efforts);
 };
 
