@@ -28,21 +28,12 @@ void Net::StartSimulation()
 int Net::Update()
 {
 	int NodesErased = 0;
-	if (!Nodes.empty())
-	{
-		for (int i = 0; i < Nodes.size();)
-		{
-			if ((Nodes[i]->GetNeighbours().empty()))
-			{
-				delete Nodes[i];
-				Nodes.erase(Nodes.begin() + i);
-				NodesErased++;
-			}
-			else i++;
-		}
-		if (Nodes.empty()) StopSimulation();
-		return NodesErased;
-	}
+	Nodes.erase(std::remove_if(Nodes.begin(), Nodes.end(), [&NodesErased](Node* node) {
+		bool ReturnValue = node->GetNeighbours().empty();
+		if (ReturnValue) NodesErased++;
+		return ReturnValue; }), Nodes.end());
+	if (Nodes.empty()) StopSimulation();
+	return NodesErased;
 }
 
 void Net::StopSimulation()
