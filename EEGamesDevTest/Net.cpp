@@ -30,7 +30,11 @@ int Net::Update()
 	int NodesErased = 0;
 	Nodes.erase(std::remove_if(Nodes.begin(), Nodes.end(), [&NodesErased](Node* node) {
 		bool ReturnValue = node->GetNeighbours().empty();
-		if (ReturnValue) NodesErased++;
+		if (ReturnValue)
+		{
+			delete node;
+			NodesErased++;
+		}
 		return ReturnValue; }), Nodes.end());
 	if (Nodes.empty()) StopSimulation();
 	return NodesErased;
