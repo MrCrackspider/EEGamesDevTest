@@ -45,6 +45,7 @@ private:
 	// Checks each node's ID
 	bool IsIDExists(int ID);
 
+	// Returns -1 if generated IDs exist
 	int GenerateNewID(int Efforts);
 };
 

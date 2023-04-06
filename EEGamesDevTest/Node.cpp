@@ -8,13 +8,10 @@ Node::Node(int ID)
 	Name = "Node_" + std::to_string(ID);
 }
 
+// Meaningless operation
 Node::~Node()
 {
-	for (auto node : Subscriptions)
-	{
-		this->UnsubscribeFrom(node.second);
-		//node.second->OnUnsubscribed(this);
-	}
+	for (auto node : Subscriptions) this->UnsubscribeFrom(node.second);
 }
 
 bool Node::SubscribeTo(Node* node)
@@ -61,10 +58,7 @@ int Node::MakeEvent()
 	srand((unsigned)time(NULL));
 	int EventValue = rand() % 100;
 	Node* NewNode = new Node(ID);
-	for (auto sub : Subscribers)
-	{
-		sub.second->OnEventReceived(this, EventValue);
-	}
+	for (auto sub : Subscribers) sub.second->OnEventReceived(this, EventValue);
 	return EventValue;
 }
 
