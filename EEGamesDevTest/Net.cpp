@@ -84,10 +84,11 @@ void Net::StartSimulationThread()
 		EventsAmount = 0;
 
 		std::cout << "-----------------------------------------------\nIteration: " << Iteration << std::endl;
+
 		for (int i = 0; i < Nodes.size(); ++i)
 		{
 			int Action = GetRandom(0, 100);
-			// Make an event
+			// Make event
 			if (Action <= Probabilities.pEvent)
 			{
 				int EventValue = Nodes[i]->MakeEvent();
@@ -109,12 +110,12 @@ void Net::StartSimulationThread()
 			else if (Action <= (Probabilities.pSubscription + Probabilities.pNewNode + Probabilities.pEvent))
 			{
 				auto Neighbours = Nodes[i]->GetNeighbours();
-				if (Neighbours.size() > 0)
+				if (!Neighbours.empty())
 				{
 					auto Neighbour = Neighbours.begin();
 					std::advance(Neighbour, GetRandom(0, static_cast<int>(Neighbours.size()) - 1));
 					Neighbours = Neighbour->second->GetNeighbours();
-					if (Neighbours.size() > 0)
+					if (!Neighbours.empty())
 					{
 						Neighbour = Neighbours.begin();
 						std::advance(Neighbour, GetRandom(0, static_cast<int>(Neighbours.size()) - 1));
@@ -134,7 +135,7 @@ void Net::StartSimulationThread()
 			else if (Action <= (Probabilities.pUnsubscription + Probabilities.pSubscription + Probabilities.pNewNode + Probabilities.pEvent))
 			{
 				auto Subscriptions = Nodes[i]->GetSubscriptions();
-				if (Subscriptions.size() > 0)
+				if (!Subscriptions.empty())
 				{
 					auto Subscription = Subscriptions.begin();
 					std::advance(Subscription, GetRandom(0, static_cast<int>(Subscriptions.size()) - 1));
@@ -153,18 +154,17 @@ void Net::StartSimulationThread()
 					<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl;
 			}
 		}
+		
 		Iteration++;
+		size_t NodesSize = Nodes.size();
+		int NodesErased = 0;
+		NodesErased = Update();
 
 		std::cout << "Iteration stats:\nEvents generated: " << EventsAmount << std::endl;
 		std::cout << "New nodes created: " << NewNodesAmount << std::endl;
 		std::cout << "New subscriptions amount: " << NewSubscriptionAmount << std::endl;
 		std::cout << "Unsubscriptions amount: " << NewUnsubscriptionAmount << std::endl;
-
-		size_t NodesSize = Nodes.size();
-		int NodesErased = 0;
-		NodesErased = Update();
 		std::cout << "Nodes erased: " << NodesErased << "/" << NodesSize << "\n-----------------------------------------------\n\n";
-
 	}
 }
 
@@ -178,13 +178,7 @@ int Net::GetRandom(int Min, int Max)
 
 bool Net::IsIDExists(int ID)
 {
-	for (auto node : Nodes)
-	{
-		if (node->GetID() == ID)
-		{
-			return true;
-		}
-	}
+	for (auto node : Nodes) return node->GetID() == ID;
 	return false;
 }
 
