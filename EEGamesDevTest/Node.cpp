@@ -8,14 +8,16 @@ Node::Node(int ID)
 	Name = "Node_" + std::to_string(ID);
 }
 
-void Node::SubscribeTo(Node* node)
+bool Node::SubscribeTo(Node* node)
 {
 	if (node->ID != this->ID)
 	{
 		Subscriptions.insert({ node->ID, node });
 		Neighbours.insert({ node->ID, node });
 		node->OnSubscribed(this);
+		return true;
 	}
+	else return false;
 }
 
 void Node::UnsubscribeFrom(Node* node)

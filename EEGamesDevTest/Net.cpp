@@ -118,10 +118,13 @@ void Net::StartSimulationThread()
 					{
 						Neighbour = Neighbours.begin();
 						std::advance(Neighbour, GetRandom(0, static_cast<int>(Neighbours.size()) - 1));
-						Nodes[i]->SubscribeTo(Neighbour->second);
-						NewSubscriptionAmount++;
-						std::cout << Nodes[i]->GetName() << " Subscribed to " << Neighbour->second->GetName() << "\t\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
-							<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl;
+						if (Nodes[i]->SubscribeTo(Neighbour->second))
+						{
+							NewSubscriptionAmount++;
+							std::cout << Nodes[i]->GetName() << " Subscribed to " << Neighbour->second->GetName() << "\t\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
+								<< "\t#Subscriptions:" << Nodes[i]->GetSubscriptions().size() << std::endl;
+						}
+						else std::cout << Nodes[i]->GetName() << " Failed to subscribe\n";
 					}
 					else std::cout << Nodes[i]->GetName() << " Failed to subscribe\n";
 				}

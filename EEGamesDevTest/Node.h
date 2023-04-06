@@ -13,7 +13,7 @@ public:
 	Node(int ID);
 
 	// Subscribes to node and notifies it
-	void SubscribeTo(Node* node);
+	bool SubscribeTo(Node* node);
 
 	// Unsubscribes from node and notifies it
 	void UnsubscribeFrom(Node* node);
