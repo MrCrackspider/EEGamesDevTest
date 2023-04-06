@@ -3,6 +3,7 @@
 #include <thread>
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 #define DEBUG
 
@@ -36,32 +37,20 @@ void Net::StartSimulation()
 int Net::Update()
 {
 	int NodesErased = 0;
-	//size_t NodesSize = Nodes.size();
-	if (Nodes.size() > 0)
+	if (!Nodes.empty())
 	{
-		for (int i = 0; i < Nodes.size(); ++i) std::cout << i << ": " << Nodes[i]->GetName() << " size: " << Nodes[i]->GetNeighbours().size() << std::endl;
-		for (int i = 0; i < Nodes.size(); ++i)
+		for (int i = 0; i < Nodes.size();)
 		{
-			for (int i = 0; i < Nodes.size(); ++i)
+			if ((Nodes[i]->GetNeighbours().empty()))
 			{
-				if ((Nodes[i]->GetNeighbours().size() <= 0) && (std::find(ExceptionList.begin(), ExceptionList.end(), Nodes[i]->GetID()) == ExceptionList.end()))
-				{
-					//delete Nodes[i];
-					Nodes.erase(Nodes.begin() + i);
-					NodesErased++;
-					break;
-				}
+				delete Nodes[i];
+				Nodes.erase(Nodes.begin() + i);
+				NodesErased++;
 			}
+			else i++;
 		}
-
-		if (Nodes.size() <= 0) StopSimulation();
-		ExceptionList.clear();
+		if (Nodes.empty()) StopSimulation();
 		return NodesErased;
-	}
-	else
-	{
-		StopSimulation();
-		return 0;
 	}
 }
 
@@ -91,8 +80,11 @@ void Net::FillRandomNodes(int AmountOfNodes, int AmountOfSubscriptions)
 	}
 	Update();
 	std::cout << "Initial nodes(" << Nodes.size() << "):\n";
+	int subscriptions = 0, subscribers = 0;
 	for (auto node : Nodes)
 	{
+		subscriptions += node->GetSubscriptions().size();
+		subscribers += node->GetSubscribers().size();
 		std::cout << node->GetName() << " \t#Subscribers: " << node->GetSubscribers().size() << " \t#Subscriptions: " << node->GetSubscriptions().size() << std::endl;
 	}
 }
@@ -108,13 +100,18 @@ void Net::StartSimulationThread()
 	int NewSubscriptionAmount = 0;
 	int NewNodesAmount = 0;
 	int EventsAmount = 0;
+	int SubscriptionsAmount = 0;
+	int SubscribersAmount = 0;
 
 	while (SimulationRunning)
 	{
+		
 		NewUnsubscriptionAmount = 0;
 		NewSubscriptionAmount = 0;
 		NewNodesAmount = 0;
 		EventsAmount = 0;
+		SubscriptionsAmount = 0;
+		SubscribersAmount = 0;
 
 		std::cout << "-----------------------------------------------\nIteration: " << Iteration << std::endl;
 		for (int i = 0; i < Nodes.size(); ++i)
@@ -136,9 +133,9 @@ void Net::StartSimulationThread()
 				{
 					NewID = GetRandom(0, 1000);
 				} while (IsIDExists(NewID));
-				auto NewNode = Nodes[i]->CreateNewNode(NewID);
+				Node* NewNode = Nodes[i]->CreateNewNode(NewID);
 				Nodes.push_back(NewNode);
-				ExceptionList.push_back(NewNode->GetID());
+				//IDExceptionList.push_back(NewNode->GetID());
 				NewNodesAmount++;
 				NewSubscriptionAmount++;
 				debug(Nodes[i]->GetName() << " Created new node " << NewNode->GetID() << "\t#Subscribers:" << Nodes[i]->GetSubscribers().size()
@@ -190,10 +187,20 @@ void Net::StartSimulationThread()
 			}
 		}
 		Iteration++;
+		for (auto node : Nodes)
+		{
+			SubscriptionsAmount += node->GetSubscriptions().size();
+			SubscribersAmount += node->GetSubscribers().size();
+		}
+		assert(SubscriptionsAmount == SubscribersAmount);
+
 		std::cout << "Events happened: " << EventsAmount << std::endl;
 		std::cout << "New nodes created: " << NewNodesAmount << std::endl;
 		std::cout << "New subscriptions amount: " << NewSubscriptionAmount << std::endl;
 		std::cout << "Unsubscriptions amount: " << NewUnsubscriptionAmount << std::endl;
+		std::cout << "Subscribers Amount: " << SubscribersAmount << std::endl;
+		std::cout << "Subscriptions Amount: " << SubscriptionsAmount << std::endl;
+
 		size_t NodesSize = Nodes.size();
 		int NodesErased = 0;
 		NodesErased = Update();

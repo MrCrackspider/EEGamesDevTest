@@ -32,8 +32,8 @@ private:
 
 	std::vector<Node*> Nodes;
 
-	// ExceptionList used to ignore new created nodes
-	std::vector<int> ExceptionList;
+	// IDExceptionList used to ignore new created nodes
+	//std::vector<int> IDExceptionList;
 
 	// Event probabilities (in %) of nodes making event / subscription / unsubscription / new node respectively
 	struct EventProbabilities Probabilities;

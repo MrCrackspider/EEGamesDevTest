@@ -21,7 +21,11 @@ void Node::SubscribeTo(Node* node)
 void Node::UnsubscribeFrom(Node* node)
 {
 	Subscriptions.erase(node->ID);
-	Neighbours.erase(node->ID);
+	auto Item = Subscribers.find(node->ID);
+	if (Item == Subscribers.end())
+	{
+		Neighbours.erase(node->ID);
+	}
 	node->OnUnsubscribed(this);
 }
 
@@ -33,8 +37,13 @@ void Node::OnSubscribed(Node* node)
 
 void Node::OnUnsubscribed(Node* node)
 {
-	Neighbours.erase(node->ID);
 	Subscribers.erase(node->ID);
+
+	auto Item = Subscriptions.find(node->ID);
+	if (Item == Subscriptions.end())
+	{
+		Neighbours.erase(node->ID);
+	}
 }
 
 int Node::MakeEvent()
@@ -44,8 +53,7 @@ int Node::MakeEvent()
 	Node* NewNode = new Node(ID);
 	for (auto sub : Subscribers)
 	{
-		Node* tptr(this);
-		sub.second->OnEventReceived(tptr, EventValue);
+		sub.second->OnEventReceived(this, EventValue);
 	}
 	return EventValue;
 }
@@ -63,8 +71,8 @@ void Node::OnEventReceived(Node* node, int EventValue)
 		NodesData.insert({ node->ID, NodeData{ EventValue, 1 } });
 	}
 	Item = NodesData.find(node->ID);
-	std::cout << node->GetName() << " -> " << this->GetName() << ": S = " << Item->second.EventSumm << std::endl;
-	std::cout << node->GetName() << " -> " << this->GetName() << ": N = " << Item->second.EventsReceived << std::endl;
+	std::cout << "\t" << node->GetName() << " -> " << this->GetName() << ": S = " << Item->second.EventSumm << std::endl;
+	std::cout << "\t" << node->GetName() << " -> " << this->GetName() << ": N = " << Item->second.EventsReceived << std::endl;
 }
 
 Node* Node::CreateNewNode(int ID)
