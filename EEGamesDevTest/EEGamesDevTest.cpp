@@ -18,6 +18,7 @@ int main()
         {
         case 's':
             net->StartSimulation();
+            run = true;
             while (run)
             {
                 if (_kbhit())
