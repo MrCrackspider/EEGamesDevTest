@@ -57,7 +57,6 @@ int Node::MakeEvent()
 {
 	srand((unsigned)time(NULL));
 	int EventValue = rand() % 100;
-	Node* NewNode = new Node(ID);
 	for (auto sub : Subscribers) sub.second->OnEventReceived(this, EventValue);
 	return EventValue;
 }
